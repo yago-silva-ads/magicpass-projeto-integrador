@@ -1,25 +1,61 @@
-# ✨ MagicPass Viagens — Projeto Integrador SENAC 2026
+
+<p align="center">
+  <img src="docs_img/hero-black-friday.png" alt="MagicPass Viagens - Black Friday" width="100%">
+</p>
+
+<h1 align="center">✨ MagicPass Viagens</h1>
+<p align="center"><b>Projeto Integrador · SENAC 2026</b></p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Backend-Spring%20Boot%203.5-6DB33F?logo=springboot&logoColor=white">
+  <img src="https://img.shields.io/badge/Frontend-Angular%2021-DD0031?logo=angular&logoColor=white">
+  <img src="https://img.shields.io/badge/Java-17%2B-007396?logo=openjdk&logoColor=white">
+  <img src="https://img.shields.io/badge/Banco-H2%20%2F%20MySQL-4479A1?logo=mysql&logoColor=white">
+  <img src="https://img.shields.io/badge/status-em%20desenvolvimento-yellow">
+</p>
 
 Sistema de **venda de ingressos e pacotes de viagem para os parques Disney**, com campanha **Black Friday**.
 Back end em **Spring Boot 3.5 (Java 17+)** e front end em **Angular 21**, seguindo POO e MVC.
 
-## Como rodar
+---
+
+## 📸 Preview
+
+<p align="center">
+  <img src="docs_img/login.png" alt="Tela de login" width="90%">
+  <br><i>Área do consultor — login restrito</i>
+</p>
+
+<p align="center">
+  <img src="docs_img/vitrine-personagens.png" alt="Vitrine pública Black Friday" width="90%">
+  <br><i>Vitrine pública — personagens e destinos</i>
+</p>
+
+---
+
+## 🚀 Como rodar
 
 ### Opção A — um único arquivo (recomendado para a máquina do professor)
 Requisito: Java 17 ou mais novo.
-```
+```bash
 java -jar magicpass.jar
 ```
 Abra **http://localhost:8080**. O banco H2 é criado sozinho na pasta `data/` e já vem com dados de exemplo.
+
+> 💡 Se a porta 8080 já estiver em uso por outro serviço, rode com uma porta alternativa:
+> ```bash
+> java -jar magicpass.jar --server.port=8081
+> ```
+
 (Para gerar o `magicpass.jar` e o `.zip`: `powershell -ExecutionPolicy Bypass -File empacotar.ps1`)
 
 ### Opção B — desenvolvimento (2 terminais)
-```
+```bash
 cd backend   &&  mvn spring-boot:run          # API em http://localhost:8080
 cd frontend  &&  npm install && npx ng serve  # tela em http://localhost:4200
 ```
 
-### Logins iniciais
+### 🔐 Logins iniciais
 | Perfil | Login | Senha |
 |---|---|---|
 | Administrador | `admin` | `admin123` |
@@ -27,7 +63,23 @@ cd frontend  &&  npm install && npx ng serve  # tela em http://localhost:4200
 
 Novos usuários são cadastrados pelo administrador na tela **Usuários** (as senhas são gravadas com hash BCrypt).
 
-## Requisitos do PI atendidos
+---
+
+## 👥 Integrantes
+
+| Nome |
+|---|
+| Matheus Goulart |
+| Yago |
+| Erik Davi |
+| Murilo Luiz |
+| Victor Harger |
+
+**Professor:** Marcos Monteiro · **Apresentação:** 17/11/2026 e 24/11/2026
+
+---
+
+## ✅ Requisitos do PI atendidos
 | Requisito | Onde |
 |---|---|
 | Spring Boot + Angular | `backend/` e `frontend/` |
@@ -36,7 +88,7 @@ Novos usuários são cadastrados pelo administrador na tela **Usuários** (as se
 | Login e senha cadastrados pelo administrador | Tela Usuários (só ADMIN), token de sessão, perfis ADMIN/VENDEDOR |
 | CPF, CNPJ, RG e IE validados pelos dígitos verificadores | `validation/DocumentoValidator.java` (back) e `core/validadores.ts` (front). CNPJ aceita o novo formato alfanumérico; IE para SP, RJ, PR e SC (ou ISENTO) |
 
-## Regras que evitam erros (ex.: "-1")
+## 🛡️ Regras que evitam erros (ex.: "-1")
 - Id nulo, zero, negativo ou inexistente → **404 com mensagem clara**, nunca exceção crua.
 - Preço, estoque, dias, quantidade e desconto negativos são recusados (back e front).
 - O estoque **nunca fica negativo**: venda, alteração, cancelamento e exclusão ajustam o estoque numa transação (tudo ou nada).
@@ -45,28 +97,30 @@ Novos usuários são cadastrados pelo administrador na tela **Usuários** (as se
 - O último administrador ativo não pode ser excluído nem desativado.
 - Todo erro volta como JSON `{status, mensagem, campos}` e aparece no formulário, ao lado do campo.
 
-## Black Friday (motor de preços)
+## 🛍️ Black Friday (motor de preços)
 - Campanha automática por categoria (Ingressos 30% / Pacotes 40%).
 - **Família/grupo:** a partir de 4 itens, +5%.
 - **Cupom** `BLACKMAGIC`: +10%.
 - **PIX:** +5% no total; cartão em até 12x sem juros.
 - Desconto máximo de 70% por item. A vitrine pública `/black-friday` tem contagem regressiva, cupom que copia com um clique e um simulador para a viagem da família.
 
-## Visual e animacoes
-- Fotos reais dos 6 parques e dos personagens nos desfiles (Mickey, Cinderela, Rapunzel, Dumbo, Ariel), todas do Wikimedia Commons com licenca livre. Os creditos ficam em `frontend/public/img/CREDITOS.md` e no rodape da vitrine.
-- Icones SVG proprios no lugar dos emojis; o logo e uma estrela dourada animada.
-- Animacoes: zoom lento nas fotos de fundo, brilhos dourados subindo, contagem regressiva pulsando, cards que aparecem em cascata ao rolar a pagina, faixa de personagens rolando sem parar, numeros do painel contando ate o valor e transicao suave entre as telas.
-- Quem ativa "reduzir movimento" no sistema operacional ve tudo sem animacao.
+## 🎨 Visual e animações
+- Fotos reais dos 6 parques e dos personagens nos desfiles (Mickey, Cinderela, Rapunzel, Dumbo, Ariel), todas do Wikimedia Commons com licença livre. Os créditos ficam em `frontend/public/img/CREDITOS.md` e no rodapé da vitrine.
+- Ícones SVG próprios no lugar dos emojis; o logo é uma estrela dourada animada.
+- Animações: zoom lento nas fotos de fundo, brilhos dourados subindo, contagem regressiva pulsando, cards que aparecem em cascata ao rolar a página, faixa de personagens rolando sem parar, números do painel contando até o valor e transição suave entre as telas.
+- Quem ativa "reduzir movimento" no sistema operacional vê tudo sem animação.
 
-## Testes automatizados
-```
+## 🧪 Testes automatizados
+```bash
 cd backend && mvn test
 ```
 São 12 testes: validadores e fluxo real da API, cobrindo CRUD, ids -1/0, negativos, estoque, permissões e Black Friday.
 
-## Próximos passos (escalar para venda real)
+## 🗺️ Próximos passos (escalar para venda real)
 - Tornar-se revendedor autorizado ou integrar com uma operadora/consolidadora credenciada (a venda de ingressos oficiais exige esse vínculo).
 - Gateway de pagamento (PIX/cartão) e emissão de voucher.
 - Carrinho público para o cliente final, migração para MySQL/PostgreSQL (perfil `mysql` já incluído) e JWT.
 
-> Projeto acadêmico. Disney e as marcas relacionadas pertencem à The Walt Disney Company. Os preços são ilustrativos.
+---
+
+<p align="center"><i>Projeto acadêmico. Disney e as marcas relacionadas pertencem à The Walt Disney Company. Os preços são ilustrativos.</i></p>
