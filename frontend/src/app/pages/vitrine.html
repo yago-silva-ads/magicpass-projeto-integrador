@@ -1,0 +1,194 @@
+<div class="bf">
+  <header class="bf-topo">
+    <span class="logo"><app-estrela [tamanho]="28" /> <span class="logo-texto">MagicPass<small>Viagens</small></span></span>
+    <nav class="bf-nav">
+      <button (click)="irPara('ofertas')">Ofertas</button>
+      <button (click)="irPara('personagens')">Personagens</button>
+      <button (click)="irPara('destinos')">Destinos</button>
+      <button (click)="irPara('simulador')">Simulador</button>
+    </nav>
+    <a class="btn mini claro" [routerLink]="auth.logado ? '/painel' : '/login'">{{ auth.logado ? 'Ir para o sistema' : 'Area do consultor' }}</a>
+  </header>
+
+  <!-- HERO -->
+  <section class="bf-hero">
+    <div class="hero-foto"><img src="img/hero-castelo-fogos.jpg" alt="Fogos sobre o Castelo da Cinderela no Magic Kingdom" fetchpriority="high" /></div>
+    <div class="hero-veu"></div>
+    <div class="faiscas" aria-hidden="true">
+      @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]; track i) { <span [style.--i]="i"></span> }
+    </div>
+    <div class="hero-conteudo">
+      <p class="bf-tag entrada" style="--d: 0ms"><span class="ponto-vivo"></span> BLACK FRIDAY MAGICA 2026</p>
+      <h1 class="entrada" style="--d: 120ms">Ate <span class="ouro brilho-texto">{{ ateOff() }}% OFF</span><br />em ingressos e pacotes Disney</h1>
+      <p class="bf-chamada entrada" style="--d: 240ms">{{ v()?.campanha?.chamada ?? 'Os melhores precos do ano para viver a magia.' }}</p>
+
+      @if (restante(); as r) {
+        <div class="contagem entrada" style="--d: 360ms" aria-label="Tempo restante da oferta">
+          <div><b>{{ doisDigitos(r.d) }}</b><small>dias</small></div>
+          <div><b>{{ doisDigitos(r.h) }}</b><small>horas</small></div>
+          <div><b>{{ doisDigitos(r.m) }}</b><small>min</small></div>
+          <div><b class="pulsar">{{ doisDigitos(r.s) }}</b><small>seg</small></div>
+        </div>
+        <p class="bf-fim entrada" style="--d: 420ms"><app-icone nome="relogio" [tamanho]="14" /> Oferta valida ate {{ v()?.campanha?.fim | date: "dd/MM/yyyy 'as' HH:mm" }}</p>
+      }
+      <div class="hero-acoes entrada" style="--d: 480ms">
+        <button class="btn ouro brilhante" (click)="irPara('ofertas')">Ver ofertas <app-icone nome="seta" [tamanho]="16" /></button>
+        <button class="btn claro" (click)="irPara('simulador')">Simular viagem da familia</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFICIOS -->
+  <section class="beneficios">
+    <div revelar [atraso]="0"><span class="ben-icone"><app-icone nome="pix" [tamanho]="22" /></span><b>+{{ v()?.descontoPix ?? 5 }}% no PIX</b><small>em cima do preco Black</small></div>
+    <div revelar [atraso]="80"><span class="ben-icone"><app-icone nome="cartao" [tamanho]="22" /></span><b>12x sem juros</b><small>no cartao de credito</small></div>
+    @if (v()?.campanha; as c) {
+      @if (c.qtdMinimaProgressivo > 0) {
+        <div revelar [atraso]="160"><span class="ben-icone"><app-icone nome="familia" [tamanho]="22" /></span><b>Familia {{ c.qtdMinimaProgressivo }}+: +{{ c.percentualProgressivo }}%</b><small>comprando {{ c.qtdMinimaProgressivo }} itens ou mais</small></div>
+      }
+    }
+    @if (cupom(); as cp) {
+      <button class="cupom" revelar [atraso]="240" (click)="copiar(cp.codigo)">
+        <span class="ben-icone"><app-icone [nome]="copiado() === cp.codigo ? 'check' : 'copiar'" [tamanho]="22" /></span>
+        <b>Cupom <span class="codigo">{{ cp.codigo }}</span> +{{ cp.percentual }}%</b>
+        <small>{{ copiado() === cp.codigo ? 'Copiado!' : 'clique para copiar' }}</small>
+      </button>
+    }
+  </section>
+
+  @if (erro()) { <p class="alerta-erro centro">{{ erro() }}</p> }
+
+  <!-- OFERTAS -->
+  <section class="bf-secao" id="ofertas">
+    <div class="secao-cabeca" revelar>
+      <span class="sobretitulo">Ofertas</span>
+      <h2>Escolha sua magia</h2>
+    </div>
+    <div class="bf-filtros" revelar>
+      <div class="abas">
+        <button [class.ativa]="filtro() === 'TODOS'" (click)="filtro.set('TODOS')">Tudo</button>
+        <button [class.ativa]="filtro() === 'INGRESSO'" (click)="filtro.set('INGRESSO')"><app-icone nome="ingresso" [tamanho]="16" /> Ingressos</button>
+        <button [class.ativa]="filtro() === 'PACOTE'" (click)="filtro.set('PACOTE')"><app-icone nome="aviao" [tamanho]="16" /> Pacotes de viagem</button>
+      </div>
+      <select [ngModel]="ordem()" (ngModelChange)="ordem.set($event)" aria-label="Ordenar">
+        <option value="desconto">Maior desconto</option>
+        <option value="preco">Menor preco</option>
+      </select>
+    </div>
+
+    <div class="grade-ofertas">
+      @for (o of ofertas(); track o.produtoId; let i = $index) {
+        <article class="oferta" revelar [atraso]="(i % 4) * 90">
+          <div class="oferta-capa">
+            <img [src]="foto(o)" [alt]="o.parque" loading="lazy" />
+            @if (o.percentualDesconto > 0) { <span class="selo">-{{ o.percentualDesconto }}%</span> }
+            <span class="tipo">{{ o.categoria === 'PACOTE' ? 'Pacote de viagem' : 'Ingresso' }}</span>
+          </div>
+          <div class="oferta-corpo">
+            <small class="local"><app-icone nome="local" [tamanho]="13" /> {{ o.parque }} · {{ o.local }}</small>
+            <h3>{{ o.nome }}</h3>
+            <p class="desc">{{ o.descricao }}</p>
+            <div class="inclui">
+              <span><app-icone nome="calendario" [tamanho]="13" /> {{ o.dias }} dia(s)</span>
+              @if (o.incluiHotel) { <span><app-icone nome="hotel" [tamanho]="13" /> {{ o.noites }} noites</span> }
+              @if (o.incluiAereo) { <span><app-icone nome="aviao" [tamanho]="13" /> Aereo</span> }
+            </div>
+            @if (o.estoque < 10) { <p class="ultimas"><app-icone nome="fogo" [tamanho]="14" /> Ultimas {{ o.estoque }} unidades!</p> }
+            <div class="precos">
+              @if (o.percentualDesconto > 0) { <s>{{ o.precoOriginal | currency: 'BRL' }}</s> }
+              <b>{{ o.precoPromocional | currency: 'BRL' }}</b>
+              <small>ou 12x de {{ o.parcela12x | currency: 'BRL' }} · <em>{{ precoPix(o) | currency: 'BRL' }} no PIX</em></small>
+            </div>
+            <button class="btn ouro largo" (click)="reservar(o)">Reservar com consultor <app-icone nome="seta" [tamanho]="16" /></button>
+          </div>
+        </article>
+      } @empty {
+        @if (v()) { <p class="vazio">Nenhuma oferta nesta categoria.</p> }
+        @else { @for (i of [1,2,3,4]; track i) { <div class="oferta esqueleto-escuro"></div> } }
+      }
+    </div>
+  </section>
+
+  <!-- PERSONAGENS -->
+  <section class="bf-secao personagens" id="personagens">
+    <div class="secao-cabeca" revelar>
+      <span class="sobretitulo">Personagens</span>
+      <h2>Encontre quem voce ama</h2>
+      <p>Desfiles diarios com Mickey, princesas e classicos, inclusos em todos os ingressos.</p>
+    </div>
+    <div class="faixa-personagens" revelar>
+      <div class="trilho">
+        @for (rodada of [0, 1]; track rodada) {
+          @for (p of personagens; track p.foto) {
+            <figure class="personagem" [attr.aria-hidden]="rodada === 1 ? 'true' : null">
+              <img [src]="p.foto" [alt]="rodada === 0 ? p.nome + ' no ' + p.onde : ''" loading="lazy" />
+              <figcaption><b>{{ p.nome }}</b><small>{{ p.onde }}</small></figcaption>
+            </figure>
+          }
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- DESTINOS -->
+  <section class="bf-secao" id="destinos">
+    <div class="secao-cabeca" revelar>
+      <span class="sobretitulo">Destinos</span>
+      <h2>Seis parques, uma so viagem</h2>
+    </div>
+    <div class="mosaico">
+      @for (d of destinos; track d.nome; let i = $index) {
+        <figure class="destino" [class.grande]="i === 0" revelar [atraso]="i * 70">
+          <img [src]="d.foto" [alt]="d.nome" loading="lazy" />
+          <figcaption><b>{{ d.nome }}</b><small><app-icone nome="local" [tamanho]="12" /> {{ d.local }}</small></figcaption>
+        </figure>
+      }
+    </div>
+  </section>
+
+  <!-- SIMULADOR -->
+  @if (v()?.ofertas?.length) {
+    <section class="simulador" id="simulador" revelar>
+      <div>
+        <span class="sobretitulo">Simulador</span>
+        <h2>Simule a viagem da familia</h2>
+        <p>Quanto mais gente, maior o desconto. Some Black Friday + familia + cupom + PIX.</p>
+      </div>
+      <div class="sim-grade">
+        <label class="campo"><span>Produto</span>
+          <select [(ngModel)]="simProduto" (ngModelChange)="simSel.set($event)">
+            @for (o of v()!.ofertas; track o.produtoId) { <option [ngValue]="o.produtoId">{{ o.nome }}</option> }
+          </select>
+        </label>
+        <label class="campo"><span>Pessoas</span>
+          <input type="number" min="1" max="20" [ngModel]="simQtd()" (ngModelChange)="simQtd.set($event)" />
+        </label>
+        <label class="campo check"><input type="checkbox" [ngModel]="simCupom()" (ngModelChange)="simCupom.set($event)" /> <span>Usar cupom</span></label>
+        <label class="campo check"><input type="checkbox" [ngModel]="simPix()" (ngModelChange)="simPix.set($event)" /> <span>Pagar no PIX</span></label>
+      </div>
+      @if (simulacao(); as s) {
+        <div class="sim-resultado">
+          <div><small>Preco cheio</small><s>{{ s.cheio | currency: 'BRL' }}</s></div>
+          <div><small>Desconto total</small><b class="ouro">{{ s.pct }}%{{ simPix() ? ' + 5% PIX' : '' }}</b>
+            @if (s.familia) { <em>bonus familia aplicado!</em> }</div>
+          <div><small>Voce paga</small><b>{{ s.total | currency: 'BRL' }}</b><em>{{ simPix() ? 'a vista no PIX' : 'ou 12x de ' + (s.parcela | currency: 'BRL') }}</em></div>
+          <div class="economia"><small>Economia</small><b>{{ s.economia | currency: 'BRL' }}</b></div>
+        </div>
+        <button class="btn ouro brilhante" (click)="reservar(s.o)">Quero esta viagem <app-icone nome="seta" [tamanho]="16" /></button>
+      }
+    </section>
+  }
+
+  <footer class="bf-rodape">
+    <p><app-estrela [tamanho]="16" /> MagicPass Viagens · Projeto Integrador SENAC 2026 - demonstracao academica.</p>
+    <p>Disney, Mickey Mouse, os personagens e as marcas relacionadas pertencem a The Walt Disney Company. Precos ilustrativos.</p>
+    <button class="link-creditos" (click)="verCreditos.set(!verCreditos())">{{ verCreditos() ? 'Ocultar' : 'Ver' }} creditos das fotos (Wikimedia Commons)</button>
+    @if (verCreditos()) {
+      <ul class="creditos">
+        @for (c of creditos; track c.arquivo) {
+          <li><a [href]="c.fonte" target="_blank" rel="noopener">{{ c.titulo }}</a> · {{ c.autor }} · {{ c.licenca }}</li>
+        }
+      </ul>
+    }
+  </footer>
+</div>

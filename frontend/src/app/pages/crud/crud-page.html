@@ -1,0 +1,118 @@
+<section class="pagina">
+  <header class="pagina-topo">
+    <div>
+      <h1><span class="titulo-icone"><app-icone [nome]="cfg.icone" [tamanho]="22" /></span>{{ cfg.titulo }}</h1>
+      <p class="sub">{{ cfg.subtitulo }}</p>
+    </div>
+    <div class="acoes-topo">
+      <label class="busca-wrap"><app-icone nome="busca" [tamanho]="16" /><input class="busca" type="search" placeholder="Pesquisar..." [ngModel]="busca()" (ngModelChange)="busca.set($event)" /></label>
+      @if (podeEditar()) {
+        <button class="btn primario" (click)="abrirNovo()"><app-icone nome="mais" [tamanho]="16" /> Novo {{ cfg.singular }}</button>
+      }
+    </div>
+  </header>
+
+  <div class="cartao tabela-wrap">
+    @if (carregando()) {
+      <p class="vazio">Carregando...</p>
+    } @else if (filtrados().length === 0) {
+      <p class="vazio">Nenhum registro encontrado.</p>
+    } @else {
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>#</th>
+            @for (c of cfg.colunas; track c.rotulo) { <th [class.dir]="c.alinhar === 'dir'">{{ c.rotulo }}</th> }
+            @if (podeEditar()) { <th class="dir">Acoes</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtrados(); track r.id) {
+            <tr class="linha-anim" [style.--i]="$index">
+              <td class="muted">{{ r.id }}</td>
+              @for (c of cfg.colunas; track c.rotulo) {
+                <td [class.dir]="c.alinhar === 'dir'"><span [class]="c.classe ? c.classe(r) : ''">{{ c.valor(r) }}</span></td>
+              }
+              @if (podeEditar()) {
+                <td class="dir nowrap">
+                  <button class="btn mini" (click)="abrirEdicao(r)">Editar</button>
+                  <button class="btn mini perigo" (click)="confirmarExclusao(r)">Excluir</button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+  <p class="rodape-tabela">{{ filtrados().length }} de {{ registros().length }} registro(s)</p>
+</section>
+
+@if (aberto()) {
+  <div class="modal-fundo" (click)="fechar()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>{{ editandoId() ? 'Alterar' : 'Cadastrar' }} {{ cfg.singular }} @if (editandoId()) { <small>#{{ editandoId() }}</small> }</h2>
+      <form class="grade-form" (ngSubmit)="salvar()" novalidate>
+        @for (c of cfg.campos; track c.nome) {
+          @if (visivel(c)) {
+            <label class="campo" [class.inteira]="c.inteira || c.tipo === 'area'" [class.check]="c.tipo === 'check'" [class.invalido]="erros()[c.nome]">
+              @if (c.tipo === 'check') {
+                <input type="checkbox" [(ngModel)]="modelo[c.nome]" [name]="c.nome" />
+                <span>{{ c.rotulo }}</span>
+              } @else {
+                <span>{{ c.rotulo }} @if (c.obrigatorio) { <b class="req">*</b> }</span>
+                @switch (c.tipo) {
+                  @case ('select') {
+                    <select [(ngModel)]="modelo[c.nome]" [name]="c.nome">
+                      @for (o of c.opcoes; track o.valor) { <option [ngValue]="o.valor">{{ o.rotulo }}</option> }
+                    </select>
+                  }
+                  @case ('uf') {
+                    <select [(ngModel)]="modelo[c.nome]" [name]="c.nome">
+                      <option [ngValue]="''">--</option>
+                      @for (o of c.opcoes; track o.valor) { <option [ngValue]="o.valor">{{ o.rotulo }}</option> }
+                    </select>
+                  }
+                  @case ('ref') {
+                    <select [(ngModel)]="modelo[c.nome]" [name]="c.nome">
+                      <option [ngValue]="null">-- selecione --</option>
+                      @for (o of opcoesRef()[c.nome] ?? []; track o.valor) { <option [ngValue]="o.valor">{{ o.rotulo }}</option> }
+                    </select>
+                  }
+                  @case ('area') {
+                    <textarea rows="3" [(ngModel)]="modelo[c.nome]" [name]="c.nome"></textarea>
+                  }
+                  @default {
+                    <input [type]="tipoInput(c)" [(ngModel)]="modelo[c.nome]" [name]="c.nome" [placeholder]="c.placeholder ?? ''"
+                      [attr.min]="c.min ?? null" [attr.max]="c.max ?? null" [attr.step]="c.tipo === 'dinheiro' ? '0.01' : null"
+                      [autocomplete]="c.tipo === 'senha' ? 'new-password' : 'off'" />
+                  }
+                }
+                @if (erros()[c.nome]) { <small class="erro">{{ erros()[c.nome] }}</small> }
+                @else if (c.dica) { <small class="dica">{{ c.dica }}</small> }
+              }
+            </label>
+          }
+        }
+        @if (erroGeral()) { <p class="alerta-erro inteira">{{ erroGeral() }}</p> }
+        <div class="modal-acoes inteira">
+          <button type="button" class="btn" (click)="fechar()">Cancelar</button>
+          <button type="submit" class="btn primario" [disabled]="salvando()">{{ salvando() ? 'Salvando...' : 'Salvar' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (excluindo(); as r) {
+  <div class="modal-fundo" (click)="excluindo.set(null)">
+    <div class="modal pequeno" (click)="$event.stopPropagation()">
+      <h2>Excluir {{ cfg.singular }}?</h2>
+      <p>Confirma a exclusao de <b>{{ cfg.nomeRegistro(r) }}</b>? Esta acao nao pode ser desfeita.</p>
+      <div class="modal-acoes">
+        <button class="btn" (click)="excluindo.set(null)">Cancelar</button>
+        <button class="btn perigo" (click)="excluir()">Excluir</button>
+      </div>
+    </div>
+  </div>
+}

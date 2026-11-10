@@ -1,0 +1,110 @@
+<section class="pagina">
+  <header class="pagina-topo">
+    <div>
+      <h1><span class="titulo-icone"><app-icone nome="carrinho" [tamanho]="22" /></span>{{ vendaId() ? 'Alterar venda #' + vendaId() : 'Nova venda' }}</h1>
+      <p class="sub">Os descontos da Black Friday, cupom, familia e PIX sao calculados automaticamente</p>
+    </div>
+    <a class="btn" routerLink="/vendas">Voltar</a>
+  </header>
+
+  @if (carregado()) {
+    <div class="venda-grade">
+      <div class="cartao">
+        <label class="campo" [class.invalido]="erros()['cliente']">
+          <span>Cliente <b class="req">*</b></span>
+          <select [(ngModel)]="req.clienteId" (ngModelChange)="recalcular()">
+            <option [ngValue]="null">-- selecione o cliente --</option>
+            @for (c of clientes(); track c.id) { <option [ngValue]="c.id">{{ c['nome'] }} - {{ cpf(c['cpf']) }}</option> }
+          </select>
+          @if (erros()['cliente']) { <small class="erro">{{ erros()['cliente'] }}</small> }
+          @if (clientes().length === 0) { <small class="dica">Nenhum cliente. <a routerLink="/clientes">Cadastre um cliente</a>.</small> }
+        </label>
+
+        <h3 class="titulo-itens">Itens do carrinho</h3>
+        @for (i of req.itens; track $index; let idx = $index) {
+          <div class="item-venda entrar" [class.invalido]="erros()['item' + idx]">
+            <label class="campo produto">
+              <span>Produto</span>
+              <select [(ngModel)]="i.produtoId" (ngModelChange)="recalcular()">
+                <option [ngValue]="null">-- selecione --</option>
+                @for (p of produtos(); track p.id) {
+                  <option [ngValue]="p.id" [disabled]="p['estoque'] <= 0 && i.produtoId !== p.id">
+                    {{ p['nome'] }} · {{ p['preco'] | currency: 'BRL' }} · estoque {{ p['estoque'] }}
+                  </option>
+                }
+              </select>
+            </label>
+            <label class="campo qtd">
+              <span>Qtd.</span>
+              <input type="number" min="1" max="20" step="1" [(ngModel)]="i.quantidade" (ngModelChange)="recalcular()" />
+            </label>
+            <label class="campo data">
+              <span>Data da visita</span>
+              <input type="date" [min]="hoje" [(ngModel)]="i.dataVisita" (ngModelChange)="recalcular()" />
+            </label>
+            <button class="btn mini perigo remover" type="button" title="Remover item" (click)="removerItem(idx)" [disabled]="req.itens.length === 1"><app-icone nome="x" [tamanho]="16" /></button>
+            @if (erros()['item' + idx]) { <small class="erro linha">{{ erros()['item' + idx] }}</small> }
+          </div>
+        }
+        <button class="btn" type="button" (click)="adicionarItem()" [disabled]="req.itens.length >= 30"><app-icone nome="mais" [tamanho]="16" /> Adicionar item</button>
+
+        <div class="pagamento">
+          <label class="campo">
+            <span>Forma de pagamento</span>
+            <select [(ngModel)]="req.formaPagamento" (ngModelChange)="mudouPagamento()">
+              <option value="PIX">PIX (5% extra de desconto)</option>
+              <option value="CARTAO_CREDITO">Cartao de credito (ate 12x sem juros)</option>
+              <option value="BOLETO">Boleto</option>
+            </select>
+          </label>
+          <label class="campo" [class.invalido]="erros()['parcelas']">
+            <span>Parcelas</span>
+            <select [(ngModel)]="req.parcelas" (ngModelChange)="recalcular()" [disabled]="req.formaPagamento !== 'CARTAO_CREDITO'">
+              @for (n of [1,2,3,4,5,6,7,8,9,10,11,12]; track n) { <option [ngValue]="n">{{ n }}x</option> }
+            </select>
+          </label>
+          <label class="campo">
+            <span>Cupom</span>
+            <input [(ngModel)]="req.cupom" (ngModelChange)="recalcular()" placeholder="Ex.: BLACKMAGIC" maxlength="20" class="maiusculo" />
+          </label>
+        </div>
+        <label class="campo">
+          <span>Observacao</span>
+          <textarea rows="2" maxlength="500" [(ngModel)]="req.observacao"></textarea>
+        </label>
+      </div>
+
+      <aside class="cartao resumo">
+        <h3>Resumo</h3>
+        @if (cotacao(); as c) {
+          @for (i of c.itens; track $index) {
+            <div class="linha-resumo">
+              <span>{{ i.quantidade }}x {{ i.produto }}</span>
+              <span class="dir">
+                @if (i.percentualDesconto > 0) { <s>{{ i.precoUnitario | currency: 'BRL' }}</s> <em class="selo-mini">-{{ i.percentualDesconto }}%</em> }
+                {{ i.totalItem | currency: 'BRL' }}
+              </span>
+            </div>
+          }
+          <hr />
+          <div class="linha-resumo"><span>Subtotal</span><span>{{ c.subtotal | currency: 'BRL' }}</span></div>
+          <div class="linha-resumo verde"><span>Descontos Black Friday</span><span>-{{ c.descontoPromocoes | currency: 'BRL' }}</span></div>
+          @if (c.descontoPix > 0) { <div class="linha-resumo verde"><span>PIX 5%</span><span>-{{ c.descontoPix | currency: 'BRL' }}</span></div> }
+          <div class="linha-resumo total"><span>Total</span><span>{{ c.total | currency: 'BRL' }}</span></div>
+          @if (c.parcelas > 1) { <p class="parcelas">{{ c.parcelas }}x de {{ c.valorParcela | currency: 'BRL' }} sem juros</p> }
+          @if (c.promocoesAplicadas.length) {
+            <div class="promos">@for (p of c.promocoesAplicadas; track p) { <span><app-icone nome="promocao" [tamanho]="12" /> {{ p }}</span> }</div>
+          }
+        } @else if (!erroCotacao()) {
+          <p class="vazio">Escolha os produtos para ver o preco.</p>
+        }
+        @if (erroCotacao()) { <p class="alerta-erro">{{ erroCotacao() }}</p> }
+        <button class="btn ouro largo" (click)="salvar()" [disabled]="salvando()">
+          {{ salvando() ? 'Salvando...' : vendaId() ? 'Salvar alteracoes' : 'Finalizar venda' }}
+        </button>
+      </aside>
+    </div>
+  } @else {
+    <p class="vazio">Carregando...</p>
+  }
+</section>
