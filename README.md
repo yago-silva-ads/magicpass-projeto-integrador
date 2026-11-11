@@ -65,6 +65,25 @@ Novos usuários são cadastrados pelo administrador na tela **Usuários** (as se
 
 ---
 
+## ☁️ Deploy (produção)
+
+Arquitetura separada, igual aos outros projetos: **Angular no Vercel** + **Spring Boot no Render**.
+
+### Backend → Render
+1. Crie um novo **Web Service** no [Render](https://render.com), conectado a este repositório.
+2. O arquivo `render.yaml` já define root `backend/`, build (`mvn clean package`) e start (`java -jar target/magicpass-1.0.0.jar --server.port=$PORT`).
+3. Após o primeiro deploy, copie a URL pública (ex.: `https://magicpass-backend.onrender.com`).
+
+### Frontend → Vercel
+1. Importe este repositório no [Vercel](https://vercel.com/new), apontando o **Root Directory** para `frontend/`.
+2. Antes do deploy, atualize `frontend/src/environments/environment.prod.ts` com a URL real do backend no Render (`apiUrl: 'https://SEU-BACKEND.onrender.com/api'`).
+3. O `vercel.json` já configura build (`npm run build`), output (`dist/frontend/browser`) e rewrites de SPA.
+4. CORS no backend (`WebConfig.java`) já libera qualquer subdomínio `*.vercel.app`.
+
+> Plano free do Render "dorme" após inatividade — a primeira requisição do dia pode demorar ~30s para acordar o serviço.
+
+---
+
 ## 👥 Integrantes
 
 | Nome |

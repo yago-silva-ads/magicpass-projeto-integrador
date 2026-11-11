@@ -3,8 +3,9 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, firstValueFrom, throwError } from 'rxjs';
 import { Entidade, ErroApi, Sessao } from './modelos';
+import { environment } from '../../environments/environment';
 
-export const API = '/api';
+export const API = environment.apiUrl;
 
 /** Converte qualquer erro HTTP em {status, mensagem, campos}. */
 export function lerErro(e: unknown): ErroApi {

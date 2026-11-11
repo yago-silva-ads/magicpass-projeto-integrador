@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: magicpass-backend
+    env: java
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: "mvn -B -DskipTests clean package"
+    startCommand: "java -jar target/magicpass-1.0.0.jar --server.port=$PORT"
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: default
